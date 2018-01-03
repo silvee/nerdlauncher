@@ -1,6 +1,7 @@
 package com.example.silvee.nerdlauncher;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Bundle;
@@ -73,19 +74,28 @@ public class NerdLauncherFragment extends Fragment {
 
 
     // Viewholder class
-    private class ActivityHolder extends RecyclerView.ViewHolder {
+    private class ActivityHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private ResolveInfo resolveInfo;
         private TextView textView;
 
         public ActivityHolder(View itemView) {
             super(itemView);
             textView = (TextView) itemView;
+            textView.setOnClickListener(this);
         }
 
         public void bindActivity(ResolveInfo resolveInfo) {
             this.resolveInfo = resolveInfo;
             PackageManager pm = getActivity().getPackageManager();
             textView.setText(resolveInfo.loadLabel(pm).toString());
+        }
+
+        @Override
+        public void onClick(View v) {
+            ActivityInfo activityInfo = resolveInfo.activityInfo;
+            Intent intent = new Intent(Intent.ACTION_MAIN)
+                    .setClassName(activityInfo.applicationInfo.packageName, activityInfo.name);
+            startActivity(intent);
         }
     }
 

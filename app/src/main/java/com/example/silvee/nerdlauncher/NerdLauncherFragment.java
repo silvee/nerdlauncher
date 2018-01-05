@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 
@@ -57,10 +58,13 @@ public class NerdLauncherFragment extends Fragment {
     }
 
     private void setupAdapter() {
+        /* retrieve information from OS about apps that can be launched */
         Intent startupIntent = new Intent(Intent.ACTION_MAIN);
         startupIntent.addCategory(Intent.CATEGORY_LAUNCHER);
         PackageManager pm = getActivity().getPackageManager();
         List<ResolveInfo> activities = pm.queryIntentActivities(startupIntent, 0);
+
+        /* Sorting the list */
         Collections.sort(activities, new Comparator<ResolveInfo>() {
             @Override
             public int compare(ResolveInfo o1, ResolveInfo o2) {
@@ -69,6 +73,7 @@ public class NerdLauncherFragment extends Fragment {
             }
         });
         Log.i(TAG, "Found " + activities.size() + " activities.");
+
         recyclerView.setAdapter(new ActivityAdapter(activities));
     }
 
@@ -76,25 +81,30 @@ public class NerdLauncherFragment extends Fragment {
     // Viewholder class
     private class ActivityHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         private ResolveInfo resolveInfo;
-        private TextView textView;
+        private TextView textView;   // application name
+        private ImageView imageView; // application icon
 
         public ActivityHolder(View itemView) {
             super(itemView);
-            textView = (TextView) itemView;
-            textView.setOnClickListener(this);
+            textView = itemView.findViewById(R.id.list_item_textview);
+            imageView = itemView.findViewById(R.id.list_item_imageview);
+            itemView.setOnClickListener(this);
         }
 
         public void bindActivity(ResolveInfo resolveInfo) {
             this.resolveInfo = resolveInfo;
             PackageManager pm = getActivity().getPackageManager();
             textView.setText(resolveInfo.loadLabel(pm).toString());
+            imageView.setImageDrawable(resolveInfo.loadIcon(pm));
         }
 
+        // clicking item launches corresponding activity
         @Override
         public void onClick(View v) {
             ActivityInfo activityInfo = resolveInfo.activityInfo;
             Intent intent = new Intent(Intent.ACTION_MAIN)
-                    .setClassName(activityInfo.applicationInfo.packageName, activityInfo.name);
+                    .setClassName(activityInfo.applicationInfo.packageName, activityInfo.name)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         }
     }
@@ -112,7 +122,7 @@ public class NerdLauncherFragment extends Fragment {
         @Override
         public ActivityHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-            View view = layoutInflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+            View view = layoutInflater.inflate(R.layout.list_item_view, parent, false);
             return new ActivityHolder(view);
         }
 
